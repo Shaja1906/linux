@@ -1,12 +1,12 @@
 # .bashrc
 # Source global definitions
-if [ -f /etc/bashrc ]; then
+if [[ -f /etc/bashrc ]]
+then
 	. /etc/bashrc
 fi
 # Uncomment the following line if you don't like systemctl's auto-paging feature:
 # export SYSTEMD_PAGER=
 # User specific aliases and functions
-
 unalias rm >/dev/null 2>&1
 unset -f rm
 rm ()
@@ -20,7 +20,7 @@ rm ()
 	SRC=$(echo "$@" | sed "s/-f //;s/-rf //;s/-fr //;s/-r //;s/ -rf //g;s/ -fr //g;s/^\-rf //;s/^\-fr //;")
 	echo "$SRC" | /usr/bin/grep "\/$" >/dev/null 2>&1
 	Ret=$?
-	if [ 0 -eq $Ret ]
+	if [[ 0 -eq $Ret ]]
 	then
 		SRC=$(echo -ne "$SRC" | /usr/bin/sed "s/\/$//;")
 	fi
@@ -46,7 +46,7 @@ rm ()
 }
 export PS1='[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]
 $ '
-IPv4=$(/usr/sbin/ip -f inet addr show dev em1 2>&1 |\
+export IPv4=$(/usr/sbin/ip -f inet addr show dev em1 2>&1 |\
 /usr/bin/awk '"inet" == $1 {
 	printf( "%s", substr( $2, 1, index( $2, "/")-1 ) );
 }')
@@ -57,17 +57,17 @@ alias ll='/usr/bin/ls -ltr'
 alias lla='/usr/bin/ls -latr'
 echo "$PATH" | /usr/bin/grep -E "^\.:|:\.:|:\.$" >/dev/null 2>&1
 Ret=$?
-if [ 0 -ne $Ret ]
+if [[ 0 -ne $Ret ]]
 then
 	export PATH="$PATH:."
 fi
-if [ "" = "$ORACLE_HOME" ]
+if [[ "" = "$ORACLE_HOME" ]]
 then
 	export ORACLE_HOME=/ora11gclnt/product/11.2.0/client_1
 fi
 echo "$PATH" | /usr/bin/grep -E "^\/ora11gclnt\/product\/11\.2\.0\/client_1\/bin:|:\/ora11gclnt\/product\/11\.2\.0\/client_1\/bin:|:\/ora11gclnt\/product\/11\.2\.0\/client_1\/bin$" >/dev/null 2>&1
 Ret=$?
-if [ 0 -ne $Ret ]
+if [[ 0 -ne $Ret ]]
 then
 	export PATH="$ORACLE_HOME/bin:$PATH"
 fi
@@ -83,7 +83,21 @@ else
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/ora11gclnt/product/11.2.0/client_1/lib"
 	fi
 fi
-alias sqlplus='$ORACLE_HOME/bin/sqlplus LYCABLUCHERTESTNEW3/lyca@RDDEVDB'
+unalias sqlplus >/dev/null 2>&1
+unset -f sqlplus
+sqlplus ()
+{
+	if [[ 0 -eq $# ]]
+	then
+		echo -ne "[H[J[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]\n$ sqlplus LYCABLUCHERTESTNEW3/lyca@RDDEVDB\n"
+		$ORACLE_HOME/bin/sqlplus LYCABLUCHERTESTNEW3/lyca@RDDEVDB
+	else
+		echo -ne "[H[J[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]\n$ sqlplus $@\n"
+		$ORACLE_HOME/bin/sqlplus $@
+	fi
+	Ret=$?
+	return $Ret
+}
 ulimit -c unlimited
 unalias swap >/dev/null 2>&1
 unset -f swap
@@ -108,23 +122,24 @@ swap ()
 	return $Ret
 }
 set -o vi
+unalias lcd >/dev/null 2>&1
 unset -f lcd
 lcd ()
 {
-	if [ 0 -eq $# ]
+	if [[ 0 -eq $# ]]
 	then
 		echo "lcd cpp"
 		echo "lcd python"
 		Ret=$?
 		return $Ret
 	fi
-	if [ "python" = "$1" ]
+	if [[ "python" = "$1" ]]
 	then
 		cd ~/.python
 		Ret=$?
 		return $Ret
 	fi
-	if [ "cpp" = "$1" ]
+	if [[ "cpp" = "$1" ]]
 	then
 		cd ~/SampleProgram
 		Ret=$?
@@ -134,3 +149,53 @@ lcd ()
 	Ret=$?
 	return $Ret
 }
+unalias expr >/dev/null 2>&1
+unset -f expr
+expr ()
+{
+	if [[ 0 -eq $# ]]
+	then
+		/usr/bin/bc -q
+	else
+		echo "$@" | /usr/bin/grep "scale=" >/dev/null 2>&1
+		Ret=$?
+		if [ 0 -eq $Ret ]
+		then
+			echo "$@" | /usr/bin/bc -q
+		else
+			echo "scale=2;$@" | /usr/bin/bc -q
+		fi
+	fi
+	Ret=$?
+	return $Ret
+}
+unalias vi >/dev/null 2>&1
+unset -f vi
+vi ()
+{
+	if [[ 0 -eq $# ]]
+	then
+		/usr/bin/vim
+	else
+		echo "$@" | /usr/bin/grep -E "\.bashrc" >/dev/null 2>&1
+		Ret=$?
+		if [[ 0 -eq $Ret ]]
+		then
+			LAST_MODIFIED="$(/usr/bin/stat -c "%y"  ~/.bashrc)"
+		fi
+		/usr/bin/vim $@
+		echo "$@" | /usr/bin/grep -E "\.bashrc" >/dev/null 2>&1
+		Ret=$?
+		if [[ 0 -eq $Ret ]]
+		then
+			CURR_MODIFIED="$(/usr/bin/stat -c "%y"  ~/.bashrc)"
+			if [[ "$LAST_MODIFIED" != "$CURR_MODIFIED" ]]
+			then
+				. ~/.bashrc
+			fi
+		fi
+	fi
+	Ret=$?
+	return $Ret
+}
+alias gdb='/usr/bin/gdb -q '
