@@ -89,8 +89,8 @@ sqlplus ()
 {
 	if [[ 0 -eq $# ]]
 	then
-		echo -ne "[H[J[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]\n$ sqlplus LYCABLUCHERTESTNEW3/lyca@RDDEVDB\n"
-		$ORACLE_HOME/bin/sqlplus LYCABLUCHERTESTNEW3/lyca@RDDEVDB
+		echo -ne "[H[J[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]\n$ sqlplus dbusername/dbpassword@dbservice\n"
+		$ORACLE_HOME/bin/sqlplus dbusername/dbpassword@dbservice
 	else
 		echo -ne "[H[J[33m$LOGNAME@$IPv4 [32m$PWD [0m[ $? ]\n$ sqlplus $@\n"
 		$ORACLE_HOME/bin/sqlplus $@
